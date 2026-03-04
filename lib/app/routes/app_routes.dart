@@ -8,6 +8,8 @@ abstract class Routes {
   static const SPIRITUAL = _Paths.SPIRITUAL;
   static const INFO = _Paths.INFO;
   static const LIBRARY = _Paths.LIBRARY;
+  static const CALENDAR = _Paths.CALENDAR;
+  static const QIBLA = _Paths.QIBLA;
 }
 
 abstract class _Paths {
@@ -17,4 +19,6 @@ abstract class _Paths {
   static const SPIRITUAL = '/spiritual';
   static const INFO = '/info';
   static const LIBRARY = '/library';
+  static const CALENDAR = '/calendar';
+  static const QIBLA = '/qibla';
 }

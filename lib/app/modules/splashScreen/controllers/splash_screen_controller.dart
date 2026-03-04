@@ -1,23 +1,13 @@
 import 'package:get/get.dart';
+import '../../../routes/app_pages.dart';
 
 class SplashScreenController extends GetxController {
-  //TODO: Implement SplashScreenController
-
-  final count = 0.obs;
   @override
-  void onInit() {
-    super.onInit();
-  }
-
-  @override
-  void onReady() {
+  Future<void> onReady() async {
     super.onReady();
+    await Future<void>.delayed(const Duration(seconds: 2));
+    if (!isClosed) {
+      Get.offAllNamed(Routes.HOME);
+    }
   }
-
-  @override
-  void onClose() {
-    super.onClose();
-  }
-
-  void increment() => count.value++;
 }
