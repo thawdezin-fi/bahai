@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'dart:math' as math;
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/library_controller.dart';
@@ -7,52 +8,253 @@ import '../controllers/library_controller.dart';
 class LibraryView extends GetView<LibraryController> {
   const LibraryView({super.key});
 
-  static final _features = [
-    _LibraryFeature(
-      title: 'ပြက္ခဒိန်၏ အခြေခံတည်ဆောက်ပုံ',
-      subtitle:
-          'The 19-19-4/5 rule that defines the rhythm of the Badi Calendar and how Leap and Intercalary days are inserted.',
-      icon: Icons.calendar_month_outlined,
-      badge: 'Calendar Logic',
-      highlights: [
-        '၁ နှစ်မှာ ၁၉ လ၊ ၁ လမှာ ၁၉ ရက် (၃၆၁ ရက် စုစုပေါင်း။)',
-        'နေရောင်ပေါင်းစုစုပေါင်း ၃၆၅ / ၃၆၆ ရက်ကို Ayyám-i-Há (Intercalary Days) နဲ့ ဖြည့်တင်း။',
-        'Ayyám-i-Há ကို Bahá\'í နိုင်ငံက ၁၈ လနှင့် ၁၉ လ အကြား ထည့်သွင်းပြီး နေဝင်ချိန်အလိုက် အချိန်တာဝန်ယူ။',
-      ],
-      notes: [
-        '(က) Naw-Rúz သတ်မှတ်ချက် သည် Vernal Equinox (March 20/21) သို့မဟုတ် သတ်မှတ်ထားသော နေရာအလိုက် တွက်ချက်။',
-        '(ခ) Gregorian Leap Year ကို အခြေခံပြီး Ayyám-i-Há ကို Leap အတွက် ၄ သို့မဟုတ် ၅ ရက်တွင် ချိန်ညှိ။',
-        '(ဂ) Sunset-based start time မူတည်ပြီး နေဝင်ချိန်စနစ်အတွက် GPS ကိရိယာများအသုံးပြုသည်။',
-      ],
-      codeSnippet: '''
+  static const _monthChips = [
+    'Month 1: Bahá (ရောင်ခြည်တော်)',
+    'Month 18: Mulk (အုပ်စိုးမှု)',
+    'Intercalary Days: Ayyám-i-Há (ပျော်ရွှင်ခြင်း)',
+    'Month 19: ‘Alá’ (မြင့်မြတ်ခြင်း)',
+  ];
+
+  static const _calendarSteps = [
+    '၁၉ လ၊ ၁၉ ရက် (၃၆၁ ရက် စုစုပေါင်း) အတွင်း နေဝင်ချိန်အရ Ayyám-i-Há အပါအဝင် တိကျတဲ့ အချိန်तालင်းကို ထိန်းသိမ်းပါ။',
+    'March 20/21 (Naw-Rúz) မှ စပြီး နေဝင်ချိန်ကိုထား၍ ရက်ပေါင်းများကို ၁၉ နဲ့ ခွဲစိတ်ဆောင်ပါ။',
+    'Leap နေသည့် နှစ်တွင် Ayyám-i-Há သည် ၅ ရက်ဖြစ်ပြီး မဟုတ်ရင် ၄ ရက်သာ ပါဝင်သည်။',
+  ];
+
+  static const _directionTips = [
+    'ကိဗ်လာ Bahjí, Israel (32.9433° N, 35.0919° E) ကို ရှာဖွေရန် Great Circle Bearing formula ကို အသုံးပြုပါ။',
+    'Phone ကို Flat ထားရန်၊ GPS & Compass permission ကို ခွင့်ပြုရန်၊ Calibration ပြုလုပ်ရန် သတိပေးပါ။',
+    'Result ကို တိုက်ရိုက် ကြည့်နိုင်ရန် Compass widget အတွင်း Bahá\'u\'lláh စိန် (logo) ကို သတ်မှတ်၍ အချိန်ပြန်ပြပါ။',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    return Scaffold(
+      backgroundColor: colorScheme.surfaceVariant.withOpacity(0.2),
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: _buildHeader(context)),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _CalendarCard(
+                    primary: colorScheme.primary,
+                    accent: colorScheme.secondary,
+                    onDetailTap: () => _showCalendarDetail(context),
+                  ),
+                  const SizedBox(height: 12),
+                  _DirectionCard(
+                    primary: colorScheme.primary,
+                    accent: colorScheme.secondary,
+                    onDetailTap: () => _showDirectionDetail(context),
+                  ),
+                ]),
+              ),
+            ),
+            const SliverPadding(padding: EdgeInsets.only(bottom: 30)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(Icons.menu_book_rounded, size: 32),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('ဉာဏ်အလင်း Library', style: theme.textTheme.headlineSmall),
+                const SizedBox(height: 6),
+                Text(
+                  'Calendar နှင့် Qiblih တို့ကို စူးစမ်းဖို့ လမ်းပြအဆင့်အသစ်',
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.auto_stories_rounded, color: theme.colorScheme.primary),
+        ],
+      ),
+    );
+  }
+
+  void _showCalendarDetail(BuildContext context) {
+    final theme = Theme.of(context);
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.background,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 50,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurface.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text('ပြက္ခဒိန် Logic', style: theme.textTheme.headlineSmall),
+              const SizedBox(height: 10),
+              ..._calendarSteps
+                  .map(
+                    (step) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('• ', style: TextStyle(fontSize: 20)),
+                          Expanded(
+                            child: Text(
+                              step,
+                              style: theme.textTheme.bodyMedium,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: _monthChips
+                    .map(
+                      (label) => Chip(
+                        label: Text(label),
+                        backgroundColor: theme.colorScheme.primary.withOpacity(
+                          0.15,
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+              const SizedBox(height: 18),
+              Text('Pseudo-Code', style: theme.textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const SelectableText('''
 void getBadiDate(DateTime gregorianDate, double latitude, double longitude) {
   final sunsetTime = calculateSunset(gregorianDate, latitude, longitude);
   if (gregorianDate.isAfter(sunsetTime)) {
     gregorianDate = gregorianDate.add(Duration(days: 1));
   }
-
   final daysSinceNawRuz = calculateDaysSinceNawRuz(gregorianDate);
-  // Use ၁၉ to derive month/day, handle Ayyám-i-Há as special case.
-}
-''',
-    ),
-    _LibraryFeature(
-      title: 'ဘဟာအီ ကိဗ်လာ (Qiblih Direction)',
-      subtitle:
-          'A compass-inspired helper that guides the believer toward the Shrine of Bahá\'u\'lláh from anywhere.',
-      icon: Icons.explore_outlined,
-      badge: 'Direction & Bearing',
-      highlights: [
-        'Location: Bahjí, near Akka, Israel (32.9433° N, 35.0919° E).',
-        'Daily obligatory prayers require facing this Shrine.',
-        'Compass interface sings with gentle accuracy hints and calibration cues.',
-      ],
-      notes: [
-        'Use absolute bearing formula: θ=atan2(sin(Δλ)⋅cos(ϕ₂), cos(ϕ₁)⋅sin(ϕ₂) - sin(ϕ₁)⋅cos(ϕ₂)⋅cos(Δλ)).',
-        'Δλ = λ₂ - λ₁ (Qiblih minus user longitude); convert degrees to radians before trigonometry.',
-        'Remind user to keep the phone flat, grant location permission, and verify Magnetometer calibration.',
-      ],
-      codeSnippet: '''
+  // 1. Use daysSinceNawRuz to derive month/day via 19-cycle.
+  // 2. Handle Ayyám-i-Há as an intercalary block based on leap year check.
+}''', style: TextStyle(fontFamily: 'monospace', height: 1.4)),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  Get.back();
+                },
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text('လက်ရှိပြက္ခဒိန်အချက်အလက်အား ပိတ်ရန်'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDirectionDetail(BuildContext context) {
+    final theme = Theme.of(context);
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.background,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 50,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurface.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Qiblih Bearing Logic',
+                style: theme.textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 10),
+              ..._directionTips
+                  .map(
+                    (tip) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('• ', style: TextStyle(fontSize: 20)),
+                          Expanded(
+                            child: Text(tip, style: theme.textTheme.bodyMedium),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
+              const SizedBox(height: 12),
+              _CompassIndicator(heading: 142),
+              const SizedBox(height: 14),
+              Text('Direction Formula', style: theme.textTheme.titleMedium),
+              const SizedBox(height: 8),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const SelectableText('''
 import 'dart:math' as math;
 
 class QiblihService {
@@ -74,114 +276,45 @@ class QiblihService {
     return (bearing * (180.0 / math.pi) + 360) % 360;
   }
 }
-''',
-    ),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    return Scaffold(
-      backgroundColor: colorScheme.surfaceVariant.withOpacity(0.3),
-      body: SafeArea(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(Icons.book_outlined, size: 28),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'ဉာဏ်အလင်း Library',
-                            style: theme.textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'အချစ်တရားကို နက်နဲစွာ နားလည်ဖို့ နေ့စဉ်လေ့လာမှု အစီအစဉ်',
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(Icons.chevron_right, color: colorScheme.primary),
-                  ],
+''', style: TextStyle(fontFamily: 'monospace', height: 1.4)),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => Get.back(),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
+                child: const Text('Direction Detail ပိတ်ရန်'),
               ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final feature = _features[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: _LibraryFeatureCard(
-                      feature: feature,
-                      accent: colorScheme.secondary,
-                    ),
-                  );
-                }, childCount: _features.length),
-              ),
-            ),
-            const SliverPadding(padding: EdgeInsets.only(bottom: 32)),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _LibraryFeature {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final String badge;
-  final List<String> highlights;
-  final List<String> notes;
-  final String codeSnippet;
-
-  const _LibraryFeature({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.badge,
-    required this.highlights,
-    required this.notes,
-    required this.codeSnippet,
-  });
-}
-
-class _LibraryFeatureCard extends StatelessWidget {
-  final _LibraryFeature feature;
+class _CalendarCard extends StatelessWidget {
+  final Color primary;
   final Color accent;
+  final VoidCallback onDetailTap;
 
-  const _LibraryFeatureCard({
+  const _CalendarCard({
     super.key,
-    required this.feature,
+    required this.primary,
     required this.accent,
+    required this.onDetailTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Card(
-      elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 4,
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -191,97 +324,259 @@ class _LibraryFeatureCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor: accent.withOpacity(0.15),
-                  child: Icon(feature.icon, color: accent, size: 26),
+                  backgroundColor: accent.withOpacity(0.12),
+                  child: Icon(Icons.calendar_month, color: accent),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        feature.title,
-                        style: theme.textTheme.titleMedium!.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(feature.subtitle, style: theme.textTheme.bodySmall),
-                    ],
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ပြက္ခဒိန်၏ အခြေခံတည်ဆောက်ပုံ',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'The 19-19-4/5 structure that guards Naw-Rúz, Ayyám-i-Há, and the sunset boundary.',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
                 ),
+                const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    vertical: 4,
                     horizontal: 10,
+                    vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: accent.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(12),
+                    color: primary.withOpacity(0.15),
                   ),
                   child: Text(
-                    feature.badge,
-                    style:
-                        theme.textTheme.labelSmall?.copyWith(
-                          color: accent,
-                          fontWeight: FontWeight.bold,
-                        ) ??
-                        TextStyle(color: accent, fontSize: 12),
+                    'Calendar',
+                    style: theme.textTheme.labelSmall?.copyWith(color: primary),
                   ),
                 ),
               ],
             ),
-            const Divider(height: 28),
-            ...feature.highlights.map(
-              (highlight) => Padding(
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: LibraryView._monthChips
+                  .map(
+                    (chip) => Chip(
+                      label: Text(chip),
+                      backgroundColor: Colors.white,
+                      labelStyle: theme.textTheme.bodySmall,
+                    ),
+                  )
+                  .toList(),
+            ),
+            const SizedBox(height: 16),
+            ...LibraryView._calendarSteps.map(
+              (step) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.chevron_right, size: 18, color: accent),
-                    const SizedBox(width: 6),
+                    const Icon(Icons.check_circle_outline, size: 18),
+                    const SizedBox(width: 8),
                     Expanded(
-                      child: Text(highlight, style: theme.textTheme.bodyMedium),
+                      child: Text(step, style: theme.textTheme.bodyMedium),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 12),
-            ...feature.notes.map(
-              (note) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('•', style: TextStyle(fontSize: 18)),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(note, style: theme.textTheme.bodySmall),
-                    ),
-                  ],
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: onDetailTap,
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
-            ),
-            const SizedBox(height: 14),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: accent.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: SelectableText(
-                feature.codeSnippet.trim(),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontFamily: 'monospace',
-                  fontWeight: FontWeight.w500,
-                  height: 1.3,
-                ),
-              ),
+              child: const Text('Calendar ကို ဆက်လက်ကြည့်ရှုရန်'),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _DirectionCard extends StatelessWidget {
+  final Color primary;
+  final Color accent;
+  final VoidCallback onDetailTap;
+
+  const _DirectionCard({
+    super.key,
+    required this.primary,
+    required this.accent,
+    required this.onDetailTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: accent.withOpacity(0.12),
+                  child: Icon(Icons.explore, color: accent),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ဘဟာအီ ကိဗ်လာ (Qiblih Direction)',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Use the compass, bearing math, and Bahá\'u\'lláh’s Shrine coordinates to face the right way.',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: primary.withOpacity(0.15),
+                  ),
+                  child: Text(
+                    'Direction',
+                    style: theme.textTheme.labelSmall?.copyWith(color: primary),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                _CompassIndicator(heading: 142),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: LibraryView._directionTips
+                        .take(3)
+                        .map(
+                          (tip) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Text(tip, style: theme.textTheme.bodyMedium),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: onDetailTap,
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Text('Direction ကို တိကျအောင် ထပ်မံကြည့်ရန်'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CompassIndicator extends StatelessWidget {
+  final double heading;
+
+  const _CompassIndicator({super.key, required this.heading});
+
+  @override
+  Widget build(BuildContext context) {
+    final size = 96.0;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white,
+        border: Border.all(color: Colors.grey.shade300, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          for (var i = 0; i < 360; i += 30)
+            Positioned(
+              top: (size / 2) - 2,
+              left: size / 2 - 1,
+              child: Transform.rotate(
+                angle: math.pi * 2 * (i / 360),
+                child: Container(
+                  width: 2,
+                  height: 6,
+                  color: i % 90 == 0 ? Colors.black87 : Colors.black26,
+                ),
+              ),
+            ),
+          Transform.rotate(
+            angle: heading * (math.pi / 180),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 4,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  width: 4,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    color: Colors.black87,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Positioned(
+            bottom: 6,
+            child: Text('142°', style: TextStyle(fontSize: 12)),
+          ),
+        ],
       ),
     );
   }
