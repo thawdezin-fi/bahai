@@ -2,6 +2,12 @@ import 'package:get/get.dart';
 
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
+import '../modules/info/bindings/info_binding.dart';
+import '../modules/info/views/info_view.dart';
+import '../modules/library/bindings/library_binding.dart';
+import '../modules/library/views/library_view.dart';
+import '../modules/spiritual/bindings/spiritual_binding.dart';
+import '../modules/spiritual/views/spiritual_view.dart';
 import '../modules/splashScreen/bindings/splash_screen_binding.dart';
 import '../modules/splashScreen/views/splash_screen_view.dart';
 
@@ -22,6 +28,21 @@ class AppPages {
       name: _Paths.SPLASH_SCREEN,
       page: () => const SplashScreenView(),
       binding: SplashScreenBinding(),
+    ),
+    GetPage(
+      name: _Paths.SPIRITUAL,
+      page: () => const SpiritualView(),
+      binding: SpiritualBinding(),
+    ),
+    GetPage(
+      name: _Paths.INFO,
+      page: () => const InfoView(),
+      binding: InfoBinding(),
+    ),
+    GetPage(
+      name: _Paths.LIBRARY,
+      page: () => const LibraryView(),
+      binding: LibraryBinding(),
     ),
   ];
 }
