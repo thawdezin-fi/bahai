@@ -55,7 +55,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.QIBLA,
-      page: () => const QiblaView(),
+      page: () => QiblaView(),
       binding: QiblaBinding(),
     ),
   ];

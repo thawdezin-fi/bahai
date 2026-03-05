@@ -1,23 +1,34 @@
 import 'dart:math' as math;
 import 'package:get/get.dart';
 
+class QiblaResult {
+  final double bearing;
+  final double? turnDegrees;
+  final String? turnInstruction;
+
+  const QiblaResult({
+    required this.bearing,
+    this.turnDegrees,
+    this.turnInstruction,
+  });
+}
+
 class QiblaController extends GetxController {
+  // Qiblih (Bahjí) Coordinates
   static const qiblihLat = 32.9433;
   static const qiblihLng = 35.0919;
 
+  // Observable variable for UI updates
   final latestResult = Rxn<QiblaResult>();
 
   @override
   void onInit() {
     super.onInit();
-    latestResult.value = calculateDirection(
-      userLat: 16.8661,
-      userLng: 96.1951,
-      currentHeading: 0,
-    );
+    // Default initial calculation for Yangon
+    calculateForInput(userLat: 16.8661, userLng: 96.1951, currentHeading: 0);
   }
 
-  QiblaResult calculateDirection({
+  void calculateForInput({
     required double userLat,
     required double userLng,
     double? currentHeading,
@@ -29,9 +40,9 @@ class QiblaController extends GetxController {
 
     final deltaLambda = lambda2 - lambda1;
     final y = math.sin(deltaLambda) * math.cos(phi2);
-    final x =
-        math.cos(phi1) * math.sin(phi2) -
+    final x = math.cos(phi1) * math.sin(phi2) -
         math.sin(phi1) * math.cos(phi2) * math.cos(deltaLambda);
+
     final bearing = (_toDegrees(math.atan2(y, x)) + 360) % 360;
 
     double? turnDegrees;
@@ -49,38 +60,13 @@ class QiblaController extends GetxController {
       }
     }
 
-    return QiblaResult(
+    latestResult.value = QiblaResult(
       bearing: bearing,
       turnDegrees: turnDegrees,
       turnInstruction: turnInstruction,
     );
   }
 
-  void calculateForInput({
-    required double userLat,
-    required double userLng,
-    double? currentHeading,
-  }) {
-    latestResult.value = calculateDirection(
-      userLat: userLat,
-      userLng: userLng,
-      currentHeading: currentHeading,
-    );
-  }
-
   double _toRadians(double value) => value * (math.pi / 180.0);
-
   double _toDegrees(double value) => value * (180.0 / math.pi);
-}
-
-class QiblaResult {
-  final double bearing;
-  final double? turnDegrees;
-  final String? turnInstruction;
-
-  const QiblaResult({
-    required this.bearing,
-    required this.turnDegrees,
-    required this.turnInstruction,
-  });
 }
