@@ -12,11 +12,29 @@ class CalendarView extends GetView<CalendarController> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('August 2026', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Obx(() {
+          final monthName = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+          ][controller.selectedMonth.value.month - 1];
+          return Text(
+            '$monthName ${controller.selectedMonth.value.year}',
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          );
+        }),
         actions: [
-          IconButton(icon: const Icon(Icons.chevron_left, color: Colors.white), onPressed: () {}),
-          TextButton(onPressed: () {}, child: const Text('Today', style: TextStyle(color: Colors.white))),
-          IconButton(icon: const Icon(Icons.chevron_right, color: Colors.white), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.chevron_left, color: Colors.white),
+            onPressed: () => controller.previousMonth(),
+          ),
+          TextButton(
+            onPressed: () => controller.selectedMonth.value = DateTime(DateTime.now().year, DateTime.now().month, 1),
+            child: const Text('Today', style: TextStyle(color: Colors.white)),
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right, color: Colors.white),
+            onPressed: () => controller.nextMonth(),
+          ),
         ],
       ),
       body: Column(
@@ -35,7 +53,8 @@ class CalendarView extends GetView<CalendarController> {
                 itemBuilder: (context, index) {
                   final date = days[index];
                   final badiInfo = controller.getBadiInfo(date);
-                  final isCurrentMonth = date.month == 2026 && date.month == 8;
+                  final isCurrentMonth = date.month == controller.selectedMonth.value.month && 
+                                       date.year == controller.selectedMonth.value.year;
 
                   return Container(
                     decoration: BoxDecoration(

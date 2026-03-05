@@ -23,7 +23,7 @@ class CalendarController extends GetxController {
     '‘Alá’',
   ];
 
-  final selectedMonth = DateTime(2026, 8, 1).obs; // August 2026 ကို default ထားမယ်
+  final selectedMonth = DateTime(DateTime.now().year, DateTime.now().month, 1).obs;
 
   List<DateTime> get daysInMonth {
     final firstDay = DateTime(selectedMonth.value.year, selectedMonth.value.month, 1);
@@ -35,6 +35,14 @@ class CalendarController extends GetxController {
 
     // စုစုပေါင်း ၄၂ ကွက် (6 rows * 7 days) logic သုံးပါမယ်
     return List.generate(42, (index) => startCalendarDate.add(Duration(days: index)));
+  }
+
+  void nextMonth() {
+    selectedMonth.value = DateTime(selectedMonth.value.year, selectedMonth.value.month + 1, 1);
+  }
+
+  void previousMonth() {
+    selectedMonth.value = DateTime(selectedMonth.value.year, selectedMonth.value.month - 1, 1);
   }
 
   // ရှင့်ရဲ့ calculateBadiDate function ကို ဒီနေရာမှာ ပြန်သုံးထားပါတယ်ရှင့်
