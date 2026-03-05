@@ -23,6 +23,23 @@ class CalendarController extends GetxController {
     '‘Alá’',
   ];
 
+  final selectedMonth = DateTime(2026, 8, 1).obs; // August 2026 ကို default ထားမယ်
+
+  List<DateTime> get daysInMonth {
+    final firstDay = DateTime(selectedMonth.value.year, selectedMonth.value.month, 1);
+    final lastDay = DateTime(selectedMonth.value.year, selectedMonth.value.month + 1, 0);
+
+    // Grid မှာ နေရာမှန်ဖို့အတွက် ရှေ့က လအဟောင်းရဲ့ ရက်တွေကို padding ထည့်ပေးရမယ် (e.g. Sunday ကနေ စဖို့)
+    final firstDayOffset = firstDay.weekday % 7;
+    final startCalendarDate = firstDay.subtract(Duration(days: firstDayOffset));
+
+    // စုစုပေါင်း ၄၂ ကွက် (6 rows * 7 days) logic သုံးပါမယ်
+    return List.generate(42, (index) => startCalendarDate.add(Duration(days: index)));
+  }
+
+  // ရှင့်ရဲ့ calculateBadiDate function ကို ဒီနေရာမှာ ပြန်သုံးထားပါတယ်ရှင့်
+  BadiDateInfo getBadiInfo(DateTime date) => calculateBadiDate(date);
+
   final now = DateTime.now().obs;
 
   BadiDateInfo get badiNow => calculateBadiDate(now.value);
