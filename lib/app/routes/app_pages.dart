@@ -14,6 +14,8 @@ import '../modules/spiritual/bindings/spiritual_binding.dart';
 import '../modules/spiritual/views/spiritual_view.dart';
 import '../modules/splashScreen/bindings/splash_screen_binding.dart';
 import '../modules/splashScreen/views/splash_screen_view.dart';
+import '../modules/warmGladTidings/bindings/warm_glad_tidings_binding.dart';
+import '../modules/warmGladTidings/views/warm_glad_tidings_view.dart';
 
 part 'app_routes.dart';
 
@@ -57,6 +59,11 @@ class AppPages {
       name: _Paths.QIBLA,
       page: () => QiblaView(),
       binding: QiblaBinding(),
+    ),
+    GetPage(
+      name: _Paths.WARM_GLAD_TIDINGS,
+      page: () => const WarmGladTidingsView(),
+      binding: WarmGladTidingsBinding(),
     ),
   ];
 }

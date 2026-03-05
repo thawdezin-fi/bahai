@@ -10,6 +10,7 @@ abstract class Routes {
   static const LIBRARY = _Paths.LIBRARY;
   static const CALENDAR = _Paths.CALENDAR;
   static const QIBLA = _Paths.QIBLA;
+  static const WARM_GLAD_TIDINGS = _Paths.WARM_GLAD_TIDINGS;
 }
 
 abstract class _Paths {
@@ -21,4 +22,5 @@ abstract class _Paths {
   static const LIBRARY = '/library';
   static const CALENDAR = '/calendar';
   static const QIBLA = '/qibla';
+  static const WARM_GLAD_TIDINGS = '/warm-glad-tidings';
 }

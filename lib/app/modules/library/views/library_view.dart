@@ -48,6 +48,18 @@ class LibraryTabContent extends StatelessWidget {
           icon: const Icon(Icons.explore_outlined),
           label: const Text('Qibla'),
         ),
+        const SizedBox(height: 12),
+        FilledButton.tonalIcon(
+          onPressed: () => Get.toNamed(Routes.INFO),
+          icon: const Icon(Icons.info),
+          label: const Text('Info'),
+        ),
+        const SizedBox(height: 12),
+        FilledButton.tonalIcon(
+          onPressed: () => Get.toNamed(Routes.WARM_GLAD_TIDINGS),
+          icon: const Icon(Icons.face),
+          label: const Text('Glad Tidings'),
+        ),
       ],
     );
   }
