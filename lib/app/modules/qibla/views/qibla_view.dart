@@ -1,119 +1,122 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import '../controllers/qibla_controller.dart';
 
 class QiblaView extends GetView<QiblaController> {
   QiblaView({super.key});
 
-  // UI Controllers
-  final latController = TextEditingController(text: '16.8661');
-  final lngController = TextEditingController(text: '96.1951');
-  final headingController = TextEditingController(text: '0');
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    return Obx(() {
+      final heading = controller.heading.value;
+      final qiblah = controller.qiblahBearing.value;
+      final score = controller.alignmentScore.value;
+      final status = controller.locationStatus.value;
+      final isLoading = controller.isLoading.value;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Qiblih Compass'), centerTitle: true),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
+      final relativeAngle = (qiblah - heading + 360) % 360;
+
+      // Dynamic background gradient
+      // Dark grey to Light Green/Green based on alignment
+      final bgColor1 = Color.lerp(const Color(0xFF1E1E1E), Colors.green.shade900, score) ?? const Color(0xFF1E1E1E);
+      final bgColor2 = Color.lerp(const Color(0xFF121212), Colors.green.shade400, score) ?? const Color(0xFF121212);
+
+      return Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          title: const Text('Qiblih Compass', style: TextStyle(color: Colors.white)),
+          centerTitle: true,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [bgColor1, bgColor2],
+            ),
+          ),
+          child: SafeArea(
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator(color: Colors.white))
+                : status == null || (status != LocationPermission.always && status != LocationPermission.whileInUse)
+                    ? _buildPermissionWarning()
+                    : _buildCompass(relativeAngle, qiblah, score),
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildPermissionWarning() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.location_off, size: 80, color: Colors.white54),
+          const SizedBox(height: 20),
+          const Text(
+            'Location Permission Required',
+            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Please enable location to find Qiblih.',
+            style: TextStyle(color: Colors.white70),
+          ),
+          const SizedBox(height: 30),
+          ElevatedButton(
+            onPressed: () => controller.requestPermission(),
+            child: const Text('Grant Permission'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompass(double relativeAngle, double qiblah, double score) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Stack(
+          alignment: Alignment.center,
           children: [
-            // --- Compass Visualizer ---
-            Obx(() {
-              final result = controller.latestResult.value;
-              final heading = double.tryParse(headingController.text) ?? 0.0;
-              final bearing = result?.bearing ?? 0.0;
-              // 1 Turn = 360 degrees
-              final rotationTurns = (bearing - heading) / 360.0;
-
-              return Column(
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Image.asset('assets/images/bahai.png', width: 260),
-                      AnimatedRotation(
-                        turns: rotationTurns,
-                        duration: const Duration(milliseconds: 600),
-                        curve: Curves.easeOutCubic,
-                        child: Image.asset('assets/images/location-pin.png', width: 140),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  if (result != null) ...[
-                    Text(
-                      'Bearing: ${result.bearing.toStringAsFixed(1)}°',
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                    Text(result.turnInstruction ?? '',
-                        style: TextStyle(color: primaryColor, fontSize: 16)),
-                  ]
-                ],
-              );
-            }),
-
-            const SizedBox(height: 30),
-
-            // --- Input Section ---
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _buildInput(latController, 'Latitude', Icons.location_on),
-                    const SizedBox(height: 12),
-                    _buildInput(lngController, 'Longitude', Icons.location_searching),
-                    const SizedBox(height: 12),
-                    _buildInput(headingController, 'Heading (Optional)', Icons.explore),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: _onCalculate,
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Calculate Direction'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            // Outer Ring or Bahai Symbol as background
+            Opacity(
+              opacity: 0.8,
+              child: Image.asset('assets/images/bahai.png', width: 280),
+            ),
+            // Compass Needle (Pin)
+            AnimatedRotation(
+              turns: (relativeAngle / 360.0), // Rotate towards Qibla relative to phone
+              duration: const Duration(milliseconds: 200),
+              child: Image.asset('assets/images/location-pin.png', width: 160),
             ),
           ],
         ),
-      ),
+        const SizedBox(height: 40),
+        Text(
+          score > 0.9 ? 'Facing Qiblih' : 'Find the Qiblih',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            shadows: score > 0.9 ? [const Shadow(color: Colors.green, blurRadius: 20)] : [],
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          '${(qiblah - controller.heading.value).abs() > 180 ? (360 - (qiblah - controller.heading.value).abs()).toStringAsFixed(1) : (qiblah - controller.heading.value).abs().toStringAsFixed(1)}° from Qiblih',
+          style: const TextStyle(color: Colors.white70, fontSize: 16),
+        ),
+      ],
     );
   }
 
-  Widget _buildInput(TextEditingController ctrl, String label, IconData icon) {
-    return TextField(
-      controller: ctrl,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon),
-        border: const OutlineInputBorder(),
-      ),
-    );
-  }
-
-  void _onCalculate() {
-    final lat = double.tryParse(latController.text);
-    final lng = double.tryParse(lngController.text);
-    final heading = double.tryParse(headingController.text);
-
-    if (lat != null && lng != null) {
-      controller.calculateForInput(
-        userLat: lat,
-        userLng: lng,
-        currentHeading: heading,
-      );
-    } else {
-      Get.snackbar('Input Error', 'Please check your coordinates',
-          snackPosition: SnackPosition.BOTTOM);
-    }
-  }
 }
