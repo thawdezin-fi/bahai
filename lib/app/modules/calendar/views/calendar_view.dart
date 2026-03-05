@@ -12,6 +12,10 @@ class CalendarView extends GetView<CalendarController> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Get.back(),
+        ),
         title: Obx(() {
           final monthName = [
             'January', 'February', 'March', 'April', 'May', 'June',
@@ -19,7 +23,7 @@ class CalendarView extends GetView<CalendarController> {
           ][controller.selectedMonth.value.month - 1];
           return Text(
             '$monthName ${controller.selectedMonth.value.year}',
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16), // Font size နည်းနည်း လျှော့ရင် ပိုလှပါတယ်
           );
         }),
         actions: [

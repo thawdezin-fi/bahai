@@ -5,8 +5,7 @@ import 'package:get/get.dart';
 import '../controllers/qibla_controller.dart';
 
 class QiblaView extends GetView<QiblaController> {
-  QiblaView({super.key});
-
+  const QiblaView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +30,10 @@ class QiblaView extends GetView<QiblaController> {
           centerTitle: true,
           backgroundColor: Colors.transparent,
           elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white), // Arrow အရောင်ကို အဖြူပေးထားပါတယ်
+            onPressed: () => Get.back(),
+          ),
         ),
         body: Container(
           width: double.infinity,

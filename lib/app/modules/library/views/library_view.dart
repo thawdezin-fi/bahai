@@ -1,3 +1,5 @@
+import 'package:bahai/app/modules/calendar/views/calendar_view.dart';
+import 'package:bahai/app/modules/qibla/views/qibla_view.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
