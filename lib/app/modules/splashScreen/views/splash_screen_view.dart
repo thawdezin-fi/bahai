@@ -20,7 +20,8 @@ class SplashScreenView extends GetView<SplashScreenController> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Bahá’í Companion',
+              //'Bahá’í Companion',
+              "Baha'i Companion",
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
